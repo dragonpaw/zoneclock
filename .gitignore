@@ -1,0 +1,8 @@
+_secrets.py
+
+# Really needs a makefile or something?
+lib/
+
+# Until I decide what to do with them.
+moon/
+fonts/
