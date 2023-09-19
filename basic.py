@@ -8,6 +8,7 @@ from adafruit_esp32spi.adafruit_esp32spi_wifimanager import (
 )
 from adafruit_datetime import timezone, timedelta
 from digitalio import DigitalInOut
+import rtc
 
 from _secrets import secrets
 
@@ -22,6 +23,12 @@ class BasicApp:
         self.board = board
         self.cron_jobs = {}
         self._cron_last_ran = {}
+        self.status_label = None
+
+    def set_boot_status(self, msg: str):
+        """Set the on-boot status, if it's still being displayed."""
+        if self.status_label:
+            self.status_label.text = msg.replace(" ", "\n")
 
     def cron_run(self):
         """Check for and run due cron jobs.
@@ -39,7 +46,10 @@ class BasicApp:
                 self._cron_last_ran[job] = now
 
     def network_setup(self) -> ESPSPI_WiFiManager:
-        """Activate the network."""
+        """Activate the WiFi network."""
+
+        self.set_boot_status("WiFi Setup")
+
         esp32_cs = DigitalInOut(board.ESP_CS)
         esp32_ready = DigitalInOut(board.ESP_BUSY)
         esp32_reset = DigitalInOut(board.ESP_RESET)
@@ -52,10 +62,13 @@ class BasicApp:
             status_pixel=neopixel.NeoPixel(board.NEOPIXEL, 1, brightness=0.2),
             debug=True,
         )
+        self.network_test()
 
     def network_test(self):
-        """Test that the network is working by fetching and printing data"""
-        # esp._debug = True
+        """Test that the network is working by fetching and printing data."""
+
+        self.set_boot_status("WiFi Test")
+
         print("Fetching text from", WIFI_TEST_URL)
         r = self.network.get(WIFI_TEST_URL)
         print("-" * 40)
@@ -65,7 +78,7 @@ class BasicApp:
 
         print("Done!")
 
-    def parse_time(self, timestring, is_dst=-1):
+    def parse_time(self, timestring: str, is_dst=-1):
         """Given a string of the format YYYY-MM-DDTHH:MM:SS.SS-HH:MM (and
         optionally a DST flag), convert to and return an equivalent
         time.struct_time (strptime() isn't available here). Calling function
@@ -73,7 +86,6 @@ class BasicApp:
         Time string is assumed local time; UTC offset is ignored. If seconds
         value includes a decimal fraction it's ignored.
         """
-        import time
 
         date_time = timestring.split("T")  # Separate into date and time
         year_month_day = date_time[0].split("-")  # Separate time into Y/M/D
@@ -102,7 +114,6 @@ class BasicApp:
         handled in the calling code because different behaviors may be
         needed in different situations (e.g. reschedule for later).
         """
-        import rtc
 
         time_url = f"http://worldtimeapi.org/api/timezone/{name}"
 
@@ -116,8 +127,13 @@ class BasicApp:
             time_struct = self.parse_time(
                 timestring=time_data["datetime"], is_dst=time_data["dst"]
             )
+            old_time = time.time()
             rtc.RTC().datetime = time_struct
-            print("RTC updated from Internet: %s" % time.localtime())
+            print(
+                "RTC updated from Internet: {0}, change was: {1}s".format(
+                    time.localtime(), old_time - time.time()
+                )
+            )
 
         delta = timedelta(seconds=time_data["raw_offset"])
         if time_data["dst"]:

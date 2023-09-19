@@ -76,12 +76,7 @@ class ZoneClock(basic.BasicApp):
 
         # WiFi setup
         self.status_label.color = self.color(colors.PURPLE)
-        self.status_label.text = "WiFi\nSetup"
         self.network_setup()
-
-        # Network test
-        self.status_label.text = "WiFi\nTest"
-        self.network_test()
 
         self.cron_jobs = {
             "set_rtc": 60 * 60,  # Yes, the RTC sucks that bad.
@@ -93,27 +88,34 @@ class ZoneClock(basic.BasicApp):
 
         Needs to be called to update when time zones change. (daily)"""
 
-        self.status_label.text = "Time\nZones"
+        self.set_boot_status("Time Zones")
         self.timezones = [
             self.lookup_timezone(name=n, set_rtc=False) for n in self.timezone_names
         ]
 
     def set_rtc(self):
-        self.status_label.text = "Time\nSync"
+        """Set the RTC to UTC."""
+
+        self.set_boot_status("Time Sync")
         self.lookup_timezone(name="UTC", set_rtc=True)
 
     def time_group(self) -> displayio.Group:
+        """Generate the main display group for the clock with all the pretty colors."""
+
         group = displayio.Group(x=0, y=4)
         font_width, font_height = self.font.get_bounding_box()
         font_width -= 1
         line_height = 8
         now = datetime.now()
+
         for i, tz in enumerate(self.timezones):
             y = i * line_height
             tz_name = tz._name  # There's no property for this.
             country_code = COUNTRY_CODES[tz_name]
             flag_colors = FLAG_COLORS[country_code]
             print("Flag colors: {0} = {1}".format(tz_name, repr(flag_colors)))
+
+            # First we print the hours
             group.append(
                 Label(
                     self.font,
@@ -123,6 +125,8 @@ class ZoneClock(basic.BasicApp):
                     y=y,
                 )
             )
+
+            # What comes next depends on the row:
             if i == 0:
                 # First row has the actual minutes of the hour
                 group.append(
@@ -166,6 +170,9 @@ class ZoneClock(basic.BasicApp):
         return group
 
     def main(self) -> None:
+        self.cron_run()
+        self.status_label = None  # No longer available.
+
         while True:
             print("Time: ", datetime.now())
             gc.collect()
