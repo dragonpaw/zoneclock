@@ -1,0 +1,46 @@
+# This file is a lie.
+# It's only here to have type hints and code introspection for local dev.
+# None of these dependencies are actually being installed as-is to the board. 
+# That's a different app, circup.
+
+# PS E:\> C:\Users\ash\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\Scripts\circup.exe freeze
+# Found device at E:\, running CircuitPython 8.2.4.
+# A newer version of CircuitPython (8.2.6) is available.
+# Get it here: https://circuitpython.org/board/matrixportal_m4
+# neopixel==6.3.9
+# adafruit_requests==2.0.1
+# adafruit_fakerequests==1.0.12
+# adafruit_lis3dh==5.2.0
+# adafruit_pixelbuf==2.0.2
+# adafruit_miniqr==2.0.1
+# simpleio==3.0.11
+# adafruit_datetime==1.2.5
+# adafruit_matrixportal==3.1.11
+# adafruit_bus_device==5.2.6
+# adafruit_portalbase==1.15.1
+# adafruit_esp32spi==6.0.0
+# adafruit_io==5.7.2
+# adafruit_bitmap_font==2.0.1
+# adafruit_display_text==3.0.0
+# adafruit_minimqtt==7.4.1
+# adafruit_fancyled==1.4.17
+
+[tool.poetry]
+name = "zoneclock"
+version = "0.1.0"
+description = ""
+authors = ["Ash Arnold <ash@dragonpaw.org>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.10.6"                               # This is a lie
+adafruit-circuitpython-esp32spi = "^6.0.1"
+adafruit-circuitpython-lis3dh = "^5.2.0"
+adafruit-circuitpython-datetime = "^1.2.5"
+adafruit-circuitpython-display-text = "^3.0.0"
+adafruit-circuitpython-matrixportal = "^3.1.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
